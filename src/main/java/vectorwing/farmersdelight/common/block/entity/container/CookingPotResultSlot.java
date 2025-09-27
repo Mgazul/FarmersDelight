@@ -51,7 +51,7 @@ public class CookingPotResultSlot extends SlotItemHandler
 
 	@Override
 	protected void checkTakeAchievements(ItemStack stack) {
-		stack.onCraftedBy(this.player.level(), this.player, this.removeCount);
+		stack.onCraftedBy(this.player, this.removeCount);
 
 		if (!this.player.level().isClientSide) {
 			tileEntity.awardUsedRecipes(this.player, tileEntity.getDroppableInventory());

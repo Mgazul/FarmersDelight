@@ -1,9 +1,15 @@
 package vectorwing.farmersdelight.common.registry;
 
 import com.google.common.collect.Sets;
+import java.util.List;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.Tool;
+import net.minecraft.world.item.component.Weapon;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import vectorwing.farmersdelight.FarmersDelight;
@@ -13,6 +19,7 @@ import vectorwing.farmersdelight.common.item.*;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.Supplier;
+import vectorwing.farmersdelight.common.tag.ModTags;
 
 @SuppressWarnings("unused")
 public class ModItems
@@ -31,8 +38,19 @@ public class ModItems
 		return new Item.Properties();
 	}
 
-	public static Item.Properties knifeItem(Tier tier) {
-		return new Item.Properties().attributes(KnifeItem.createAttributes(tier, 0.5F, -2.0F));
+	public static Item.Properties knifeItem(ToolMaterial material) {
+        HolderGetter<Block> holderGetter = BuiltInRegistries.acquireBootstrapRegistrationLookup(BuiltInRegistries.BLOCK);
+        return new Item.Properties()
+                .durability(material.durability())
+                .repairable(material.repairItems())
+                .enchantable(material.enchantmentValue())
+                .attributes(KnifeItem.createAttributes(material, 0.5F, -2.0F))
+                .component(DataComponents.TOOL, new Tool(
+                        List.of(
+                                Tool.Rule.deniesDrops(holderGetter.getOrThrow(material.incorrectBlocksForDrops())),
+                                Tool.Rule.minesAndDrops(holderGetter.getOrThrow(ModTags.MINEABLE_WITH_KNIFE), material.speed())
+                        ), 1.0F, 1, false))
+                .component(DataComponents.WEAPON, new Weapon(2));
 	}
 
 	public static Item.Properties foodItem(FoodProperties food) {
@@ -53,7 +71,7 @@ public class ModItems
 	public static final Supplier<Item> COOKING_POT = registerWithTab("cooking_pot",
 			() -> new CookingPotItem(ModBlocks.COOKING_POT.get(), basicItem().stacksTo(1)));
 	public static final Supplier<Item> SKILLET = registerWithTab("skillet",
-			() -> new SkilletItem(ModBlocks.SKILLET.get(), basicItem().stacksTo(1).attributes(SkilletItem.createAttributes(SkilletItem.SKILLET_TIER, 5.0F, -3.1F))));
+			() -> new SkilletItem(ModBlocks.SKILLET.get(), basicItem().stacksTo(1).attributes(SkilletItem.createAttributes(SkilletItem.SKILLET_MATERIAL, 5.0F, -3.1F))));
 	public static final Supplier<Item> CUTTING_BOARD = registerWithTab("cutting_board",
 			() -> new FuelBlockItem(ModBlocks.CUTTING_BOARD.get(), basicItem(), 200));
 	public static final Supplier<Item> BASKET = registerWithTab("basket",

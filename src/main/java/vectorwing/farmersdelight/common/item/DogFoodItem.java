@@ -45,7 +45,7 @@ public class DogFoodItem extends ConsumableItem
 		super(properties);
 	}
 
-	@EventBusSubscriber(modid = FarmersDelight.MODID, bus = EventBusSubscriber.Bus.GAME)
+	@EventBusSubscriber(modid = FarmersDelight.MODID)
 	public static class DogFoodEvent
 	{
 		@SubscribeEvent

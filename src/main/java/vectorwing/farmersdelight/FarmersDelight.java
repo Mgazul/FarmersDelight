@@ -1,5 +1,6 @@
 package vectorwing.farmersdelight;
 
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -20,6 +21,10 @@ public class FarmersDelight
 {
 	public static final String MODID = "farmersdelight";
 	public static final Logger LOGGER = LogManager.getLogger();
+
+    public static ResourceLocation res(String name) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, name);
+    }
 
 	public FarmersDelight(IEventBus modEventBus, ModContainer modContainer) {
 		modEventBus.addListener(CommonSetup::init);

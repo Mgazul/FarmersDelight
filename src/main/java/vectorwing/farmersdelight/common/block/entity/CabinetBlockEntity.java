@@ -19,6 +19,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ContainerOpenersCounter;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -30,7 +32,7 @@ import vectorwing.farmersdelight.common.registry.ModBlockEntityTypes;
 import vectorwing.farmersdelight.common.registry.ModSounds;
 import vectorwing.farmersdelight.common.utility.TextUtils;
 
-@EventBusSubscriber(modid = FarmersDelight.MODID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = FarmersDelight.MODID)
 public class CabinetBlockEntity extends RandomizableContainerBlockEntity
 {
 	private NonNullList<ItemStack> contents = NonNullList.withSize(27, ItemStack.EMPTY);
@@ -73,19 +75,19 @@ public class CabinetBlockEntity extends RandomizableContainerBlockEntity
 	}
 
 	@Override
-	public void saveAdditional(CompoundTag compound, HolderLookup.Provider registries) {
-		super.saveAdditional(compound, registries);
-		if (!trySaveLootTable(compound)) {
-			ContainerHelper.saveAllItems(compound, contents, registries);
+	public void saveAdditional(ValueOutput output) {
+		super.saveAdditional(output);
+		if (!trySaveLootTable(output)) {
+			ContainerHelper.saveAllItems(output, contents);
 		}
 	}
 
 	@Override
-	public void loadAdditional(CompoundTag compound, HolderLookup.Provider registries) {
-		super.loadAdditional(compound, registries);
+	public void loadAdditional(ValueInput input) {
+		super.loadAdditional(input);
 		contents = NonNullList.withSize(getContainerSize(), ItemStack.EMPTY);
-		if (!tryLoadLootTable(compound)) {
-			ContainerHelper.loadAllItems(compound, contents, registries);
+		if (!tryLoadLootTable(input)) {
+			ContainerHelper.loadAllItems(input, contents);
 		}
 	}
 

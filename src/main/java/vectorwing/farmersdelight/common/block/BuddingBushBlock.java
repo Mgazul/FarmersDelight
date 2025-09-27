@@ -7,9 +7,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -17,14 +19,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.level.block.VegetationBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.CommonHooks;
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.EventHooks;
 import vectorwing.farmersdelight.common.registry.ModItems;
 
@@ -33,7 +34,7 @@ import vectorwing.farmersdelight.common.registry.ModItems;
  * Once mature, a budding bush can "grow past" it, and turn into something different.
  */
 @SuppressWarnings("deprecation")
-public class BuddingBushBlock extends BushBlock
+public class BuddingBushBlock extends VegetationBlock
 {
 	public static final MapCodec<BuddingBushBlock> CODEC = simpleCodec(BuddingBushBlock::new);
 
@@ -51,7 +52,7 @@ public class BuddingBushBlock extends BushBlock
 	}
 
 	@Override
-	protected MapCodec<? extends BushBlock> codec() {
+	protected MapCodec<? extends VegetationBlock> codec() {
 		return CODEC;
 	}
 
@@ -127,13 +128,9 @@ public class BuddingBushBlock extends BushBlock
 			for (int posZ = -1; posZ <= 1; ++posZ) {
 				float speedBonus = 0.0F;
 				BlockState stateBelow = level.getBlockState(posBelow.offset(posX, 0, posZ));
-				TriState soilDecision = stateBelow.canSustainPlant(level, posBelow.offset(posX, 0, posZ), net.minecraft.core.Direction.UP, state);
-				if (soilDecision.isDefault()) {
-					speedBonus = 1.0F;
-					if (stateBelow.isFertile(level, pos.offset(posX, 0, posZ))) {
-						speedBonus = 3.0F;
-					}
-				}
+                if (stateBelow.hasProperty(FarmBlock.MOISTURE) && stateBelow.getValue(FarmBlock.MOISTURE) > 0) {
+                    speedBonus = 3.0F;
+                }
 
 				if (posX != 0 || posZ != 0) {
 					speedBonus /= 4.0F;
@@ -164,12 +161,7 @@ public class BuddingBushBlock extends BushBlock
 
 	@Override
 	public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-		TriState soilDecision = level.getBlockState(pos.below()).canSustainPlant(level, pos.below(), Direction.UP, state);
-		if (!soilDecision.isDefault()) {
-			return soilDecision.isTrue();
-		} else {
-			return hasSufficientLight(level, pos) && super.canSurvive(state, level, pos);
-		}
+        return hasSufficientLight(level, pos) && super.canSurvive(state, level, pos);
 	}
 
 	public static boolean hasSufficientLight(LevelReader level, BlockPos pos) {
@@ -177,23 +169,22 @@ public class BuddingBushBlock extends BushBlock
 	}
 
 	@Override
-	public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-		if (entity instanceof Ravager && EventHooks.canEntityGrief(level, entity)) {
-			level.destroyBlock(pos, true, entity);
-		}
+    public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier) {
+        if (entity instanceof Ravager && level instanceof ServerLevel serverLevel && serverLevel.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
+            level.destroyBlock(pos, true, entity);
+        }
 
-		super.entityInside(state, level, pos, entity);
-	}
+        super.entityInside(state, level, pos, entity, effectApplier);
+    }
 
 	protected ItemLike getBaseSeedId() {
 		return ModItems.TOMATO_SEEDS.get();
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
-		return new ItemStack(getBaseSeedId());
-	}
-
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+        return new ItemStack(getBaseSeedId());
+    }
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(AGE);

@@ -17,12 +17,12 @@ import java.util.concurrent.CompletableFuture;
 @MethodsReturnNonnullByDefault
 public class Recipes extends RecipeProvider
 {
-	public Recipes(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
-		super(output, registries);
+	public Recipes(RecipeOutput output, HolderLookup.Provider registries) {
+		super(registries, output);
 	}
 
 	@Override
-	protected void buildRecipes(RecipeOutput output) {
+	protected void buildRecipes() {
 		CraftingRecipes.register(output);
 		SmeltingRecipes.register(output);
 		CookingRecipes.register(output);
